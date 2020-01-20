@@ -34,6 +34,12 @@ func execute(input string) error {
 
 	args := strings.Split(input, " ")
 
+	if strings.Index(args[0], "!") != 0 {
+		args = Turtle(args)
+	} else {
+		args[0] = args[0][1:]
+	}
+
 	switch args[0] {
 	case "cd":
 		if len(args) < 2 {
