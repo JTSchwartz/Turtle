@@ -23,14 +23,23 @@ func main() {
 			_, _ = fmt.Fprintln(os.Stderr, err)
 		}
 
-		if _ = execute(input); err != nil {
+		if _ = Execute(input); err != nil {
 			fmt.Fprintln(os.Stderr, err)
 		}
 	}
 }
 
-func execute(input string) error {
+func Execute(input string) error {
 	input = strings.TrimSuffix(input, "\n")
+
+	aliasedKeywords := make([]string, 0, len(Aliased))
+	for _, key := range Aliased {
+		aliasedKeywords = append(aliasedKeywords, key)
+	}
+
+	for _, keyword := range aliasedKeywords {
+		input = strings.ReplaceAll(input, keyword, Aliased[keyword])
+	}
 
 	args := strings.Split(input, " ")
 
@@ -41,6 +50,12 @@ func execute(input string) error {
 	}
 
 	switch args[0] {
+	case "alias":
+		if args[2] != "=" {
+			return errors.New("syntax [keyword] = [macro string]")
+		}
+
+		Alias(args[1], strings.Join(args[3:], " "))
 	case "cd":
 		if len(args) < 2 {
 			return errors.New("path required")
@@ -49,6 +64,8 @@ func execute(input string) error {
 		return ChangeDir(args[1])
 	case "exit":
 		os.Exit(0)
+	case "unalias":
+		Unalias(args[1])
 	}
 
 	cmd := exec.Command(args[0], args[1:]...)
