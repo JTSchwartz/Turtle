@@ -32,13 +32,8 @@ func main() {
 func Execute(input string) error {
 	input = strings.TrimSuffix(input, "\n")
 
-	aliasedKeywords := make([]string, 0, len(Aliased))
-	for _, key := range Aliased {
-		aliasedKeywords = append(aliasedKeywords, key)
-	}
-
-	for _, keyword := range aliasedKeywords {
-		input = strings.ReplaceAll(input, keyword, Aliased[keyword])
+	for keyword, macro := range Aliased {
+		input = strings.ReplaceAll(input, keyword, macro)
 	}
 
 	args := strings.Split(input, " ")
