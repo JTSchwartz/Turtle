@@ -1,12 +1,29 @@
 package main
 
 import (
+	"bufio"
 	"os"
 )
 
 func Initialize() {
-	os.Chdir(os.Getenv("HOMEPATH"))
+	_ = os.Chdir(os.Getenv("HOMEPATH"))
 	cwd, _ := os.Getwd()
-	os.Setenv("TURT_CWD", cwd)
-	os.Setenv("TURT_PWD", cwd)
+	_ = os.Setenv("TURT_CURDIR", cwd)
+	_ = os.Setenv("TURT_PASTDIR", cwd)
+
+	readResources()
+}
+
+func readResources() {
+	if rscFile, err := os.Open(os.Getenv("HOMEPATH") + ".turtlersc"); err == nil {
+		rscReader := bufio.NewReader(rscFile)
+		for {
+			line, _ := rscReader.ReadString('\n')
+			_ = Execute(line)
+
+			if _, complete := rscReader.Peek(1); complete != nil {
+				break
+			}
+		}
+	}
 }

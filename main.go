@@ -11,26 +11,31 @@ import (
 	"strings"
 )
 
+var (
+	history []string
+)
+
 func main() {
 	Initialize()
 
 	reader := bufio.NewReader(os.Stdin)
 	for {
-		// fmt.Print("𝛙 ")
-		fmt.Print("🐢 ")
+		fmt.Printf("> ")
 		input, err := reader.ReadString('\n')
 		if err != nil {
 			_, _ = fmt.Fprintln(os.Stderr, err)
 		}
 
 		if _ = Execute(input); err != nil {
-			fmt.Fprintln(os.Stderr, err)
+			_, _ = fmt.Fprintln(os.Stderr, err)
 		}
 	}
 }
 
 func Execute(input string) error {
 	input = strings.TrimSuffix(input, "\n")
+	input = strings.TrimSuffix(input, "\r")
+	history = append(history, input)
 
 	for keyword, macro := range Aliased {
 		input = strings.ReplaceAll(input, keyword, macro)
@@ -59,6 +64,16 @@ func Execute(input string) error {
 		return ChangeDir(args[1])
 	case "exit":
 		os.Exit(0)
+	case "history":
+		for _, entry := range history {
+			fmt.Println(entry)
+		}
+	case "ls":
+		ListDir()
+		return nil
+	case "pwd":
+		fmt.Println(WorkingDir())
+		return nil
 	case "unalias":
 		Unalias(args[1])
 	}
