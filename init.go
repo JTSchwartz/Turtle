@@ -7,7 +7,7 @@ import (
 
 func Initialize() {
 	_ = os.Chdir(os.Getenv("HOMEPATH"))
-	cwd, _ := os.Getwd()
+	cwd := os.Getenv("HOMEPATH")
 	_ = os.Setenv("TURT_CURDIR", cwd)
 	_ = os.Setenv("TURT_PASTDIR", cwd)
 

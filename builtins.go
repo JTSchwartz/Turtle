@@ -1,10 +1,12 @@
 package main
 
 import (
+	"fmt"
 	"io/ioutil"
 	"log"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/jedib0t/go-pretty/v6/table"
 	"github.com/jedib0t/go-pretty/v6/text"
@@ -19,16 +21,18 @@ func Alias(keyword string, macro string) {
 }
 
 func ChangeDir(location string) error {
+	location = strings.ReplaceAll(location, "\\", "/")
+	location = strings.ReplaceAll(location, "//", "/")
+
 	if strings.HasPrefix(location, "~") {
-		location = strings.Replace(location, "~", os.Getenv("HOMEPATH"), 1)
+		location = strings.Replace(location, "~", os.Getenv("HOMEPATH")+"/", 1)
 	} else if strings.HasPrefix(location, "..") {
 		location = strings.Replace(location, "..", WorkingDir()[0:strings.LastIndex(WorkingDir(), "/")], 1)
 	} else if strings.HasPrefix(location, "@") {
-		location = strings.Replace(location, "@", os.Getenv("TURT_PASTDIR"), 1)
+		location = strings.Replace(location, "@", os.Getenv("TURT_PASTDIR")+"/", 1)
+	} else if !strings.HasPrefix(location, "/") {
+		location = WorkingDir() + "/" + location
 	}
-
-	location = strings.ReplaceAll(location, "\\", "/")
-	location = strings.ReplaceAll(location, "//", "/")
 
 	_ = os.Setenv("TURT_PASTDIR", WorkingDir())
 	_ = os.Setenv("TURT_CURDIR", location)
@@ -47,6 +51,24 @@ func formatName(name string, isDir bool) string {
 	return name
 }
 
+// https://programming.guide/go/formatting-byte-size-to-human-readable-format.html
+func formatMemory(b int64) string {
+	const unit = 1024
+	if b < unit {
+		return fmt.Sprintf("%d B", b)
+	}
+	div, exp := int64(unit), 0
+	for n := b / unit; n >= unit; n /= unit {
+		div *= unit
+		exp++
+	}
+	return fmt.Sprintf("%d %cB", b/div, "KMGTPE"[exp])
+}
+
+func formatTime(time time.Time) string {
+	return time.Format("01/02/2006 15:04")
+}
+
 func ListDir() {
 	t := table.NewWriter()
 	t.SetOutputMirror(os.Stdout)
@@ -58,7 +80,7 @@ func ListDir() {
 	}
 
 	for _, f := range files {
-		t.AppendRow([]interface{}{formatName(f.Name(), f.IsDir()), f.Size(), f.ModTime()})
+		t.AppendRow([]interface{}{formatName(f.Name(), f.IsDir()), formatMemory(f.Size()), formatTime(f.ModTime())})
 	}
 
 	t.SetStyle(table.Style{
@@ -93,6 +115,9 @@ func ListDir() {
 			SeparateHeader:  false,
 			SeparateRows:    false,
 		},
+	})
+	t.SetColumnConfigs([]table.ColumnConfig{
+		{Number: 2, Align: text.AlignRight},
 	})
 	t.Render()
 }
